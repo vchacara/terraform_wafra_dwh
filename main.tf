@@ -78,34 +78,30 @@ resource "azurerm_mssql_server_extended_auditing_policy" "sqlauditpolicy" {
 }
 
 resource "azurerm_virtual_network" "dbvnet" {
-  name                = "VC-VNET-01"
-  address_space       = ["10.4.0.0/24"]
-  resource_group_name = "rg-vc-aa-us"
-  location            = "eastus2"
+  name                = "VSNEastUS-Databases"
+  address_space       = ["10.100.5.0/24"]
+  resource_group_name = azurerm_resource_group.lab_1.name
+  location            = azurerm_resource_group.lab_1.location
 
-  subnet {
+  /*subnet {
     name           = "VSNEastUS-Databases"
-    address_prefix = "10.4.0.16/28"
-  }
+    address_prefix = "10.100.5.0/24"
+  }*/
+}
 
-  subnet {
-    name           = "TEST"
-    address_prefix = "10.4.0.0/28"
-    security_group = "/subscriptions/ceb56d52-5419-431d-9453-6701a9c46fb6/resourceGroups/rg-vc-aa-us/providers/Microsoft.Network/networkSecurityGroups/VC-VNET-NSG-01"
-  }
-
-  subnet {
-    name           = "AzureFirewallSubnet"
-    address_prefix = "10.4.0.64/26"
-  }
+resource "azurerm_subnet" "subnet_db" {
+  name                 = "VNTEastUS"
+  resource_group_name  = azurerm_resource_group.lab_1.name
+  virtual_network_name = azurerm_virtual_network.dbvnet.name
+  address_prefixes     = ["10.100.5.0/24"]
 }
 
 resource "azurerm_private_endpoint" "sqlprivatelink" {
   name                = "pl-sql-dwh-uat-eus-01"
   resource_group_name = azurerm_resource_group.lab_1.name
   location            = azurerm_virtual_network.dbvnet.location
-  subnet_id           = "/subscriptions/ceb56d52-5419-431d-9453-6701a9c46fb6/resourceGroups/rg-vc-aa-us/providers/Microsoft.Network/virtualNetworks/VC-VNET-01/subnets/VSNEastUS-Databases"
-
+  //subnet_id           = "/subscriptions/ceb56d52-5419-431d-9453-6701a9c46fb6/resourceGroups/rg-vc-aa-us/providers/Microsoft.Network/virtualNetworks/VC-VNET-01/subnets/VSNEastUS-Databases"
+  subnet_id = azurerm_subnet.subnet_db.id
 
   private_service_connection {
     name = "example-privateserviceconnection"
@@ -123,7 +119,8 @@ resource "azurerm_network_security_group" "nsg" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "nsg_to_subnet" {
-  subnet_id                 = "/subscriptions/ceb56d52-5419-431d-9453-6701a9c46fb6/resourceGroups/rg-vc-aa-us/providers/Microsoft.Network/virtualNetworks/VC-VNET-01/subnets/VSNEastUS-Databases"
+  //subnet_id                 = "/subscriptions/ceb56d52-5419-431d-9453-6701a9c46fb6/resourceGroups/rg-vc-aa-us/providers/Microsoft.Network/virtualNetworks/VC-VNET-01/subnets/VSNEastUS-Databases"
+  subnet_id = azurerm_subnet.subnet_db.id
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
@@ -151,11 +148,11 @@ resource "azurerm_app_service" "webapp" {
   }*/
 }
 
-resource "azurerm_app_service" "webapp_api" {
+resource "azurerm_windows_web_app" "webapp_api" {
   name                = "app-dwhapi-uat-eus-01"
   location            = azurerm_resource_group.lab_1.location
   resource_group_name = azurerm_resource_group.lab_1.name
-  app_service_plan_id = azurerm_app_service_plan.appserviceplan.id
+  service_plan_id = azurerm_app_service_plan.appserviceplan.id
   /*source_control {
     repo_url           = "https://github.com/Azure-Samples/nodejs-docs-hello-world"
     branch             = "master"
