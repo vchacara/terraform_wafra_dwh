@@ -136,16 +136,30 @@ resource "azurerm_app_service_plan" "appserviceplan" {
     size = "P1v2"
   }
 }
+
 # Create the web app, pass in the App Service Plan ID, and deploy code from a public GitHub repo
 resource "azurerm_app_service" "webapp" {
-  name                = "app-dwhapi-uat-eus-01"
+  name                = "app-dwhweb-uat-eus-01"
   location            = azurerm_resource_group.lab_1.location
   resource_group_name = azurerm_resource_group.lab_1.name
   app_service_plan_id = azurerm_app_service_plan.appserviceplan.id
-  source_control {
+  /*source_control {
     repo_url           = "https://github.com/Azure-Samples/nodejs-docs-hello-world"
     branch             = "master"
     manual_integration = true
     use_mercurial      = false
-  }
+  }*/
+}
+
+resource "azurerm_app_service" "webapp_api" {
+  name                = "app-dwhapi-uat-eus-01"
+  location            = azurerm_resource_group.lab_1.location
+  resource_group_name = azurerm_resource_group.lab_1.name
+  app_service_plan_id = azurerm_app_service_plan.appserviceplan.id
+  /*source_control {
+    repo_url           = "https://github.com/Azure-Samples/nodejs-docs-hello-world"
+    branch             = "master"
+    manual_integration = true
+    use_mercurial      = false
+  }*/
 }
